@@ -1,6 +1,6 @@
-baseURL: "https://blog.joaograssi.com"
+baseURL: "https://garcia.in"
 languageCode: "en-us"
-title: "Joao Grassi's blog"
+title: "Bruno Garcia's blog"
 paginate: 5
 theme: hugo-PaperMod
 
@@ -8,35 +8,10 @@ enableEmoji: true
 enableInlineShortcodes: true
 enableRobotsTXT: true
 
-# RSS feed needs to be at /rss for backward compatibility
-outputs:
-  home: ["HTML","RSS"]
-
-outputFormats:
-  RSS:
-    mediatype: "application/rss"
-    baseName: "rss"
-
-# In order to avoid need the extension on the rss feed
-mediaTypes:
-    application/rss:
-      suffixes: []
-
 languages:
   en:
     languageName: "English"
     weight: 1
-    menu:
-      main:
-        - name: Archives
-          url: /archives/
-          weight: 1
-        - name: Tags
-          url: /tags/
-          weight: 2
-        - name: Series
-          url: /series/
-          weight: 3
 
 minify:
   disableXML: true
@@ -44,8 +19,8 @@ minify:
 
 params:
   env: production
-  description: "My errands in software development. Mostly .NET stuff, with a bit of front-end here and there."
-  author: Joao
+  description: "The rants and chants of a software developer."
+  author: Bruno Garcia
   ShowReadingTime: true
   defaultTheme: auto
   ShowShareButtons: false
@@ -53,19 +28,19 @@ params:
   cover:
       responsiveImages: false
   homeInfoParams:
-        Title: Joao Grassi's Blog
-        Content: My errands in software development. Mostly .NET stuff, with a bit of front-end here and there.
+        Title: Bruno Garcia's Blog
+        Content: The rants and chants of a Software Developer.
   socialIcons:
         - name: "twitter"
-          url: "https://twitter.com/jotagrassi"
+          url: "https://twitter.com/brungarc"
         - name: "github"
-          url: "https://github.com/joaopgrassi"
+          url: "https://github.com/bruno-garcia"
         - name: "stackoverflow"
-          url: "https://stackoverflow.com/users/2689390/jpgrassi"
+          url: "https://stackoverflow.com/users/1977143/bruno-garcia"
         - name: "keybase"
-          url: "https://keybase.io/joaopgrassi"
+          url: "https://keybase.io/brunogarcia"
         - name: "rss"
-          url: "rss"
+          url: "index.xml"
 
 taxonomies:
   category: categories
