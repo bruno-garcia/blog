@@ -26,7 +26,7 @@ params:
   ShowShareButtons: false
   displayFullLangName: true
   cover:
-      responsiveImages: false
+      responsiveImages: true
   homeInfoParams:
         Title: Bruno Garcia's Blog
         Content: The rants and chants of a Software Developer.
