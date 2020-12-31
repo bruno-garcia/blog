@@ -39,6 +39,10 @@ params:
           url: "https://stackoverflow.com/users/1977143/bruno-garcia"
         - name: "keybase"
           url: "https://keybase.io/brunogarcia"
+        - name: "nuget"
+          url: "https://www.nuget.org/profiles/bruno-garcia"
+        - name: "reddit"
+          url: "https://www.reddit.com/user/bruno-garcia"
         - name: "rss"
           url: "index.xml"
 
