@@ -1,0 +1,23 @@
+---
+title: "Dotnet Minidump"
+date: 2020-12-30T16:15:37-05:00
+draft: true
+---
+
+- dotnet dump
+Why do we need that? Who needs that?
+
+What is it used for, and what is it not?
+
+And what about crashes? I obviously think a lot about that [because of my job](https://blog.sentry.io/2019/01/04/welcome-bruno-garcia
+).
+
+Essential for native apps.
+
+.NET is cross platform. Not real way to express the supported native platforms.
+
+Sentry.Minidump.
+
+sentry-native without any transport
+
+Extensive info on the readme.
