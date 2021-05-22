@@ -17,7 +17,10 @@ cover:
     alt: "A Snail."
 
 resources:
-- src: 'davidfowl-nuget-package-debug.png'
+- src: 'davidfowl-nuget-package-debug-dark.png'
+- src: 'davidfowl-nuget-package-debug-light.png'
+- src: 'dnx-release-build-pack-dark.png'
+- src: 'dnx-release-build-pack-light.png'
 - src: 'unoptimized-assembly-detected.gif'
 
 ---
@@ -25,7 +28,8 @@ resources:
 ## tl;dr
 
 You might unknowingly be using an unoptimized dependency which could impact the performance of your app.
-Now, it's easy to get a warning if that happens, at build time, using this NuGet package:
+Now, it's easy to get a warning if that happens, at build time,
+using [the NuGet package `UnoptimizedAssemblyDetector`](https://www.nuget.org/packages/UnoptimizedAssemblyDetector/):
 
 ```xml
 <PackageReference Include="UnoptimizedAssemblyDetector" Version="0.0.5">
@@ -113,12 +117,12 @@ You can browse the [Roslyn's](http://github.com/dotnet/roslyn) repository and yo
 
 [This passage from the C# compiler docs](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/code-generation#optimize) isn't something new, and there has been a lot of debate about whether the default should be changed to `Release`.
 
-[![dnx issue release build for pack command](dnx-release-build-pack.png)](https://github.com/aspnet/dnx/pull/3204)
+[![dnx issue release build for pack command](dnx-release-build-pack-dark.png)](https://github.com/aspnet/dnx/pull/3204)
 
 To me, it sounded pretty obvious at first that this should the right thing to do. As it did for a lot of folks on that thread.
 But it turns out the .NET team has strong and valid opinions to why that shouldn't be the case.
 
-[![davidfowl-nuget-package-debug](davidfowl-nuget-package-debug.png)](https://github.com/aspnet/dnx/pull/3204#issuecomment-159977194)
+[![davidfowl-nuget-package-debug](davidfowl-nuget-package-debug-dark.png)](https://github.com/aspnet/dnx/pull/3204#issuecomment-159985967)
 
 Regardless of which side of the debate you stand. 
 The truth of the matter is that we're left with packages being published to _nuget.org_ with assemblies compiled without optimization.
