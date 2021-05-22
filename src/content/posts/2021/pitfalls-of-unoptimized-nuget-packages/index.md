@@ -11,6 +11,9 @@ hidemeta: true
 comments: false
 type: posts
 
+aliases:
+    - /posts/2021/pitfalls-of-unoptimzied-nuget-packages
+
 cover:
     image: "snail-cover.jpg"
     relative: true
