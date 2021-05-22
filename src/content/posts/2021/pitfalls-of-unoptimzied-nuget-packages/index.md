@@ -25,7 +25,7 @@ resources:
 
 ---
 
-## tl;dr
+## Summary
 
 You might unknowingly be using an unoptimized dependency which could impact the performance of your app.
 Now, it's easy to get a warning if that happens, at build time,
@@ -46,23 +46,33 @@ The source code of project is [hosted on GitHub](https://github.com/bruno-garcia
 ## What's the pitfall?
 
 The default build configuration for `dotnet pack` and `dotnet publish` is not `Release` as you might assume or expect.
-When publishing NuGet packages to _nuget.org_, one must explicitly make it a release package, like: `dotnet pack -c Release`.
+When publishing NuGet packages to _nuget.org_, one must explicitly make it a release package, like: `dotnet pack -c Release`. Without it, the assemblies packed will not be compiled with optimizations.
 In this blog post you'll learn that's not always the case. Even for those who know, accidents happens and a misconfigured build script can result in a `Debug` build ending up on _nuget.org_.
 
-The default value being `Debug` isn't alone the reason why this is a pitfall.
+The default value being `Debug`, which results in unoptimized assemblies, isn't alone the reason why this is a pitfall.
 There's no warning of any kind from the point you create the NuGet package, through uploading to _nuget.org_ all the way to restoring it for your project.
 
 ## Why should I care?
 
-If you need convincing, keep reading and I'll do my best.
-On the other hand if you're already convinced, feel free to skip ahead to [Sensible defaults](#sensible-defaults).
-If you don't care if the code you run was compiled with optimizations, it's unlikely this blog post is for you.
+If you don't need convincing, feel free to skip ahead to [Sensible defaults](#sensible-defaults).
+
+### Benchmarks
+
+I would include benchmarks using `BenchmarkDotNet` but it refuses to run Debug builds:
+
+```
+➜ dotnet run
+// Validating benchmarks:
+Assembly UnoptimizedBenchmarks which defines benchmarks is non-optimized
+Benchmark was built without optimization enabled (most probably a DEBUG configuration). Please, build it in RELEASE.
+If you want to debug the benchmarks, please see https://benchmarkdotnet.org/articles/guides/troubleshooting.html#debugging-benchmarks.
+```
 
 ### Optimizations
 
 > Never use the Debug build for benchmarking. Never. The debug version of the target method can run 10–100 times slower.
 
-Source: [Good Practices by BenchmarkDotNet](https://benchmarkdotnet.org/articles/guides/good-practices.html).
+This came from [BenchmarkDotNet's Good Practices](https://benchmarkdotnet.org/articles/guides/good-practices.html) documentation. The impact that it causes to your application might not be as severe or noticeable. Ironically, benchmarking is one of the tools to measure that.
 
 The [C# compiler docs](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/code-generation#optimize) state:
 
@@ -113,9 +123,18 @@ You can browse the [Roslyn's](http://github.com/dotnet/roslyn) repository and yo
 
 ## Sensible defaults
 
+I've been talking about packaging NuGet with `Release` configuration then talking about Roslyn optimization.
+These two things are not exactly the same (though by default related) and I wish to clarify.
+
+The `Release` configuration, by default does provide the `-optimize+` flag to the C# compiler 
+but you can achieve the same for example by means of a MSBuild property `<Optimize>true</Optimize>`.
+I hope the quote from the docs I include help make this clear.
+
 > Optimize also tells the common language runtime to optimize code at runtime. By default, optimizations are disabled. Specify Optimize+ to enable optimizations. When building a module to be used by an assembly, use the same Optimize settings as used by the assembly. It's possible to combine the Optimize and Debug options.
 
 [This passage from the C# compiler docs](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/code-generation#optimize) isn't something new, and there has been a lot of debate about whether the default should be changed to `Release`.
+
+### Release as default
 
 [![dnx issue release build for pack command](dnx-release-build-pack-dark.png)](https://github.com/aspnet/dnx/pull/3204)
 
@@ -124,8 +143,9 @@ But it turns out the .NET team has strong and valid opinions to why that shouldn
 
 [![davidfowl-nuget-package-debug](davidfowl-nuget-package-debug-dark.png)](https://github.com/aspnet/dnx/pull/3204#issuecomment-159985967)
 
-Regardless of which side of the debate you stand. 
-The truth of the matter is that we're left with packages being published to _nuget.org_ with assemblies compiled without optimization.
+## Anything that can go wrong will go wrong - [Kristian Murphy Hellang](https://twitter.com/khellang)
+
+Regardless of which side of the debate you stand, the truth of the matter is that we're left with packages being published to _nuget.org_ with assemblies compiled without optimization.
 
 {{< rawhtml >}}
 <br>
@@ -135,8 +155,6 @@ The truth of the matter is that we're left with packages being published to _nug
 </div>
 <br>
 {{< /rawhtml >}}
-
-## Anything that can go wrong will go wrong - [Kristian Murphy Hellang](https://twitter.com/khellang)
 
 I feel like publishing packages to _nuget.org_ relates a lot to sailing and running aground:
 
@@ -148,22 +166,13 @@ Publishing unoptimized bits also happened to Sentry's _SharpRaven_ SDK back in 2
 
 In early 2020, I even [opened a PR to add this verification to the Sentry SDK for .NET](https://github.com/getsentry/sentry-dotnet/pull/365/files) so it would check assemblies being loaded whether they were optimized or not, and send events to Sentry when applicable. But it never felt like the right thing to do. This verification must happen much earlier, at latest during build time.
 
-## Release build and compiler optimization
-
-I've been talking about packaging NuGet with `Release` configuration then talking about Roslyn optimization.
-These two things are not exactly the same (though by default related) and I wish to clarify.
-
-The `Release` configuration, by default does provide the `-optimize+` flag to the C# compiler 
-but you can achieve the same for example by means of a MSBuild property `<Optimize>true</Optimize>`.
-I hope the references to the docs above already made this clear.
-
 ## My days are numbered
 
 That's a gloomy heading. It's the `UnoptimizedAssemblyDetector` NuGet package talking though, not me.
 I built this package in hopes for it to become obsolete one day. Not because I expect the default of `dotnet pack` to ever change.
 Clearly it won't. But I believe such warnings should be part of NuGet itself.
 
-When you push a NuGet package to _nuget.org_, it should verify the managed assemblies under `lib/` are indeed compiled with optimization, and if not, it should warn the author.
+When you push a NuGet package to _nuget.org_, it should verify if the managed assemblies under `lib/` are indeed compiled with optimization, and if not, it should warn the author.
 At the same time, when restoring such package, it should warn the consumer. This part in particular will make `UnoptimizedAssemblyDetector` redundant.
 
 What else can **we** do? [NuGet Trends](https://github.com/dotnet/nuget-trends) has the complete catalog. It could be extended to download the packages and inspect the assemblies in them. With that, create graphs and expose an endpoint to list unoptimized assemblies.
