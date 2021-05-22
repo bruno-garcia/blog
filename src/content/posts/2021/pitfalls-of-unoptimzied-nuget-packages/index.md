@@ -58,7 +58,7 @@ If you don't need convincing, feel free to skip ahead to [Sensible defaults](#se
 
 ### Benchmarks
 
-I would include benchmarks using `BenchmarkDotNet` but it refuses to run Debug builds:
+No pitfalls when running `BenchmarkDotNet` in debug mode. It stops you quickly:
 
 ```
 ➜ dotnet run
@@ -67,6 +67,89 @@ Assembly UnoptimizedBenchmarks which defines benchmarks is non-optimized
 Benchmark was built without optimization enabled (most probably a DEBUG configuration). Please, build it in RELEASE.
 If you want to debug the benchmarks, please see https://benchmarkdotnet.org/articles/guides/troubleshooting.html#debugging-benchmarks.
 ```
+
+We can force it by using `DebugBuildConfig` and to illustrate some of the differences between `Release` and `Debug` builds,
+I adapted a Fibonacci benchmark [from this blog post](https://dev.to/newday-technology/measuring-performance-using-benchmarkdotnet-part-1-39g3) to compare the two:
+
+```
+using System.Collections.Generic;
+using System.Linq;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+
+var summary = BenchmarkRunner.Run(typeof(FibonacciBenchmark).Assembly 
+#if DEBUG
+    ,new BenchmarkDotNet.Configs.DebugBuildConfig()
+#endif
+    );
+
+public class FibonacciBenchmark
+{
+    [Params(1, 2, 3, 5, 8, 13, 21, 34)]
+    public int Count { get; set; }
+
+    [Benchmark]
+    public void Fibonacci() => _ = GetFibonacci(Count).ToList();
+    
+    IEnumerable<int> GetFibonacci(int count)
+    {
+        var w = 1; var x = 1;
+
+        yield return x;
+        foreach (var _ in Enumerable.Range(1, count - 1))
+        {
+            var y = w + x;
+            yield return y;
+            w = x;
+            x = y;
+        }
+    }
+}
+```
+
+#### Debug run
+```
+➜ dotnet run -c Debug
+
+BenchmarkDotNet=v0.13.0, OS=macOS Big Sur 11.2.3 (20D91) [Darwin 20.3.0]
+Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
+.NET SDK=6.0.100-preview.3.21202.5
+  [Host]     : .NET 6.0.0 (6.0.21.20104), X64 RyuJIT
+  DefaultJob : .NET 6.0.0 (6.0.21.20104), X64 RyuJIT
+
+BuildConfiguration=Debug  
+
+|    Method | Count |      Mean |    Error |   StdDev |
+|---------- |------ |----------:|---------:|---------:|
+| Fibonacci |     1 |  83.99 ns | 1.271 ns | 0.992 ns |
+| Fibonacci |     2 | 109.46 ns | 1.460 ns | 1.366 ns |
+| Fibonacci |     3 | 124.59 ns | 0.903 ns | 0.845 ns |
+| Fibonacci |     5 | 172.64 ns | 0.930 ns | 0.726 ns |
+| Fibonacci |     8 | 213.29 ns | 1.019 ns | 0.851 ns |
+| Fibonacci |    13 | 315.48 ns | 2.518 ns | 2.103 ns |
+| Fibonacci |    21 | 470.91 ns | 2.907 ns | 2.719 ns |
+| Fibonacci |    34 | 687.77 ns | 7.792 ns | 6.507 ns |
+```
+
+#### Release run
+```
+➜ dotnet run -c Release
+
+
+|    Method | Count |      Mean |    Error |   StdDev |
+|---------- |------ |----------:|---------:|---------:|
+| Fibonacci |     1 |  60.52 ns | 0.436 ns | 0.364 ns |
+| Fibonacci |     2 |  81.21 ns | 0.465 ns | 0.388 ns |
+| Fibonacci |     3 |  93.38 ns | 0.575 ns | 0.449 ns |
+| Fibonacci |     5 | 133.85 ns | 0.969 ns | 0.809 ns |
+| Fibonacci |     8 | 167.17 ns | 2.574 ns | 3.161 ns |
+| Fibonacci |    13 | 242.88 ns | 1.877 ns | 1.567 ns |
+| Fibonacci |    21 | 369.98 ns | 5.940 ns | 5.556 ns |
+| Fibonacci |    34 | 572.87 ns | 8.560 ns | 8.007 ns |
+```
+
+It's clear that compiling in `Release` mode significantly affects the performance of this benchmark.
+How much that affects your app? You'd need to measure it. It's possible that for your app it doesn't result in any noticeable slow downs. But it possibly can.
 
 ### Optimizations
 
@@ -78,7 +161,7 @@ The [C# compiler docs](https://docs.microsoft.com/en-us/dotnet/csharp/language-r
 
 > The Optimize option enables or disables optimizations performed by the compiler to make your output file smaller, faster, and more efficient. The Optimize option is enabled by default for a Release build configuration. It is off by default for a Debug build configuration.
 
-If that wasn't enough to convince you, maybe Eric Lippert, former Principal Engineer in the C# language design team's blog post from 2009 will help. [Thanks to archive.org](https://web.archive.org/web/20110802071721/http://blogs.msdn.com/b/ericlippert/archive/2009/06/11/what-does-the-optimize-switch-do.aspx):
+To go more in depth into what kinds of optimizations are done, lets refer to Eric Lippert, former Principal Engineer in the C# language design team and his blog post on the subject. [Which we can read thanks to web.archive.org](https://web.archive.org/web/20110802071721/http://blogs.msdn.com/b/ericlippert/archive/2009/06/11/what-does-the-optimize-switch-do.aspx):
 
 * Expressions which are determined to be only useful for their side effects are turned into code that merely produces the side effects.
 * We omit generating code for things like `int foo = 0;` because we know that the memory allocator will initialize fields to default values.
@@ -118,8 +201,8 @@ somecode
 * We look for “branch to next” situations; if a branch goes to the next instruction then you can eliminate it.
 * We look for two return instructions in a row; this happens sometimes and obviously we can turn it into a single return instruction.
 
-Since writing this, Eric Lippert left Microsoft and the C# compiler was rewritten and open sourced.
-You can browse the [Roslyn's](http://github.com/dotnet/roslyn) repository and you'll [discover that new optimizations are still being suggested](https://github.com/dotnet/roslyn/issues?q=is%3Aissue+is%3Aopen+optimization+proposal) and added.
+This text was written a long time ago. And since this writing, Eric Lippert left Microsoft and the C# compiler was rewritten and open sourced.
+You can browse [Roslyn's](http://github.com/dotnet/roslyn) repository and you'll [discover that new optimizations are still being suggested](https://github.com/dotnet/roslyn/issues?q=is%3Aissue+is%3Aopen+optimization+proposal) and added.
 
 ## Sensible defaults
 
@@ -143,7 +226,7 @@ But it turns out the .NET team has strong and valid opinions to why that shouldn
 
 [![davidfowl-nuget-package-debug](davidfowl-nuget-package-debug-dark.png)](https://github.com/aspnet/dnx/pull/3204#issuecomment-159985967)
 
-## Anything that can go wrong will go wrong - [Kristian Murphy Hellang](https://twitter.com/khellang)
+## Debug builds on nuget.org
 
 Regardless of which side of the debate you stand, the truth of the matter is that we're left with packages being published to _nuget.org_ with assemblies compiled without optimization.
 
@@ -164,7 +247,7 @@ Replace _skippers_ with _package authors_ and _running aground_ with _publish pa
 
 Publishing unoptimized bits also happened to Sentry's _SharpRaven_ SDK back in 2018. If you're using [SharpRaven version 2.3.0](https://www.nuget.org/packages/SharpRaven/2.3.0), you're running an unoptimized assembly. I would recommend you [upgrade it to 2.3.1](https://github.com/getsentry/raven-csharp/pull/226/files) but on that same year that package was replaced by [Sentry](https://www.nuget.org/packages/Sentry/). Don't worry, it's [packaged in release mode](https://github.com/getsentry/sentry-dotnet/blob/bc4c5e23eaaaa848a9a44ae05ac257a591624b24/build.ps1#L14). Not that you should take my word for it.
 
-In early 2020, I even [opened a PR to add this verification to the Sentry SDK for .NET](https://github.com/getsentry/sentry-dotnet/pull/365/files) so it would check assemblies being loaded whether they were optimized or not, and send events to Sentry when applicable. But it never felt like the right thing to do. This verification must happen much earlier, at latest during build time.
+In early 2020, I even [opened a PR to add this verification to the Sentry SDK for .NET](https://github.com/getsentry/sentry-dotnet/pull/365/files) so it would check assemblies being loaded whether they were optimized or not, and send events to Sentry when applicable. But it never felt like the right thing to do. This verification must happen much earlier, at latest during build time. For this reason [`UnoptimizedAssemblyDetector`](https://www.nuget.org/packages/UnoptimizedAssemblyDetector/) was born.
 
 ## My days are numbered
 
