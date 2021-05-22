@@ -4,7 +4,7 @@ description: "Avoid using unoptimized .NET assemblies with UnoptimizedAssemblyDe
 date: 2021-05-21T16:20:00-04:00
 tags: [".NET", "Assembly", "NuGet", "Optimization"]
 author: "Bruno Garcia"
-showToc: false
+showToc: true
 TocOpen: false
 draft: false
 hidemeta: true
@@ -29,10 +29,10 @@ resources:
 
 You might unknowingly be using an unoptimized dependency which could impact the performance of your app.
 Now, it's easy to get a warning if that happens, at build time,
-using [the NuGet package `UnoptimizedAssemblyDetector`](https://www.nuget.org/packages/UnoptimizedAssemblyDetector/):
+using the NuGet package [`UnoptimizedAssemblyDetector`](https://www.nuget.org/packages/UnoptimizedAssemblyDetector/):
 
 ```xml
-<PackageReference Include="UnoptimizedAssemblyDetector" Version="0.0.5">
+<PackageReference Include="UnoptimizedAssemblyDetector" Version="0.1.0">
   <PrivateAssets>all</PrivateAssets>
 </PackageReference>
 ```
