@@ -1,7 +1,6 @@
 [submodule "src/themes/hugo-PaperMod"]
 	path = src/themes/hugo-PaperMod
-	url = git@github.com:bruno-garcia/hugo-PaperMod.git
+	url = https://github.com/adityatelange/hugo-PaperMod.git
 [submodule "src/public"]
-        path = src/public
-        url = git@github.com:bruno-garcia/bruno-garcia.github.io.git
-
+	path = src/public
+	url = git@github.com:bruno-garcia/bruno-garcia.github.io.git

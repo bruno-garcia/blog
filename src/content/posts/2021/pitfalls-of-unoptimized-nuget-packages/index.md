@@ -269,4 +269,4 @@ Well that, and ask the NuGet team to add these checks during package upload/rest
 --
 {{< rawhtml >}}
 Cover photo by <a href="https://unsplash.com/@amir_v_ali?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">amirali mirhashemian</a> on <a href="https://unsplash.com/?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
-{{< rawhtml >}}
+{{< /rawhtml >}}
