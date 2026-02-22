@@ -74,9 +74,9 @@ params:
       url: "/index.xml"
 
 taxonomies:
-  category: categories
   tag: tags
-  series: series
+
+
 
 privacy:
   disqus:
